@@ -17,6 +17,15 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: Uyeler; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA "Uyeler";
+
+
+ALTER SCHEMA "Uyeler" OWNER TO postgres;
+
+--
 -- Name: aktifyazarlarsayisi(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -70,6 +79,51 @@ $$;
 ALTER FUNCTION public."kayitEkleTR1"() OWNER TO postgres;
 
 --
+-- Name: kayitaktif(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.kayitaktif() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW."AktifM" = NEW."AktifM"= True;
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.kayitaktif() OWNER TO postgres;
+
+--
+-- Name: kayitguncelle(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.kayitguncelle() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW."DepartmanAciklamasi" = LTRIM(NEW."DepartmanAciklamasi");
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.kayitguncelle() OWNER TO postgres;
+
+--
+-- Name: listele(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.listele() RETURNS void
+    LANGUAGE sql
+    AS $$
+  SELECT * FROM "Uyeler";
+$$;
+
+
+ALTER FUNCTION public.listele() OWNER TO postgres;
+
+--
 -- Name: log_yazaradi_degisikligi(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -77,9 +131,9 @@ CREATE FUNCTION public.log_yazaradi_degisikligi() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-	IF NEW.YazarAdi <> OLD.YazarAdi THEN
-		 INSERT INTO Uyeler(UyeNo,YazarAdi)
-		 VALUES(OLD.UyeNo,OLD.YazarAdi);
+	IF NEW."YazarAdi" <> OLD."YazarAdi" THEN
+		 INSERT INTO public."Yazarlar"("YazarNo","YazarAdi")
+		 VALUES(OLD."YazarNo",OLD."YazarAdi");
 	END IF;
 
 	RETURN NEW;
@@ -537,7 +591,6 @@ INSERT INTO public."AlinanKitaplar" VALUES
 	(5, 5, 1, false),
 	(6, 5, 1, false),
 	(8, 3, 1, false),
-	(9, 10, 1, false),
 	(1, 1, 1, true),
 	(7, 6, 1, true);
 
@@ -551,8 +604,7 @@ INSERT INTO public."BagislananKitaplar" VALUES
 	(3, 1, 3),
 	(4, 3, 4),
 	(2, 1, 2),
-	(6, 1, 8),
-	(7, 1, 10);
+	(6, 1, 8);
 
 
 --
@@ -614,10 +666,11 @@ INSERT INTO public."Kitaplar" VALUES
 	(6, 98765432, 'T-SQL Egitimi', 3, 1, 150, '2019-12-09', NULL, 3, '2019-12-09'),
 	(7, 987654321, 'React Native Kitap', 3, 1, 170, '2019-12-09', NULL, 9, '2019-12-09'),
 	(9, 765432109, 'MSSQL', 3, 1, 210, '2019-12-09', NULL, 9, '2019-12-09'),
-	(10, 555555555, 'Visual Studio', 2, 1, 310, '2019-12-09', NULL, 8, '2010-05-05'),
 	(3, 2312312, 'Integral', 2, 1, 150, '2010-05-05', NULL, 8, '2020-05-05'),
 	(4, 456789012, 'Lineer Cebir', 2, 1, 200, '2019-12-07', 1, 8, '2010-02-19'),
-	(8, 876543210, 'Serway', 3, 1, 200, '2019-12-09', NULL, 9, '2010-05-05');
+	(8, 876543210, 'Serway', 3, 1, 200, '2019-12-09', NULL, 9, '2010-05-05'),
+	(10, 555555, 'VS', 2, 1, 310, NULL, NULL, 8, NULL),
+	(11, 99999, 'Masa', 2, 1, 500, NULL, NULL, 8, NULL);
 
 
 --
@@ -654,8 +707,8 @@ INSERT INTO public."Uyeler" VALUES
 	(3, 'kullanici2', 'mehmet', 'ali', '321', 'mehmet@gmail.com', NULL, NULL),
 	(6, 'kullanici3', 'ayşe', 'ak', '213', 'ayşe@gmail.com', NULL, NULL),
 	(7, 'kullanici4', 'fatma', 'al', '312', 'fatma@gmail.com', NULL, NULL),
-	(1, 'yılmazali', 'yılmaz', 'ali', '123', 'yılmaz@gmail.com', NULL, NULL),
-	(2, 'ye', 'YıLMAZ', 'erdoğan', '321', 'yılmazerdo@gmail.com', NULL, NULL);
+	(2, 'alimehmet', 'ALI', 'mehmet', '123', 'ali@gmail.com', NULL, NULL),
+	(1, 'md', 'Mustafa', 'demir', '123', 'mustafa@gmail.com', NULL, NULL);
 
 
 --
@@ -1044,10 +1097,22 @@ CREATE TRIGGER "kayitKontrol" BEFORE INSERT ON public."Uyeler" FOR EACH ROW EXEC
 
 
 --
--- Name: Yazarlar yazaradi_degisikligi; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: AlinanKitaplar kayitguncelle; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER yazaradi_degisikligi BEFORE UPDATE ON public."Yazarlar" FOR EACH ROW EXECUTE PROCEDURE public.log_yazaradi_degisikligi();
+
+--
+-- Name: Yazarlar soyadi_degisikligi; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER soyadi_degisikligi BEFORE UPDATE ON public."Yazarlar" FOR EACH ROW EXECUTE PROCEDURE public.log_yazaradi_degisikligi();
+
+
+--
+-- Name: Personel trg_kayitguncelle; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER trg_kayitguncelle BEFORE INSERT ON public."Personel" FOR EACH ROW EXECUTE PROCEDURE public.kayitguncelle();
 
 
 --
